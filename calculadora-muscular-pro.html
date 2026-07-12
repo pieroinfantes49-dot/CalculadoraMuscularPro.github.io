@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Muscular PRO</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  /* ======================================================
+     THEME SYSTEM — each .theme-x sets the accent palette.
+     .light (combined with any theme-x) flips bg/text to light.
+     ====================================================== */
+  :root {
+    --bg-1: #1a0b2e; --bg-2: #2d1250;
+    --panel: rgba(255,255,255,0.06); --panel-solid: #241246;
+    --border: rgba(255,255,255,0.12);
+    --text: #F5F3FF; --text-dim: #C4B8E8;
+    --pink: #FF3D9A; --purple: #A855F7; --cyan: #22D3EE;
+    --lime: #A3E635; --orange: #FB923C; --yellow: #FDE047;
+    --glow: rgba(168,85,247,0.35);
+    --good: #4ADE80; --bad: #F87171;
+  }
+  body.theme-yellow {
+    --bg-1: #0d0d0d; --bg-2: #332900;
+    --panel: rgba(255,255,255,0.05); --panel-solid: #1a1a1a;
+    --border: rgba(255,212,0,0.22);
+    --text: #FFFFFF; --text-dim: #C9C4A8;
+    --pink: #FFD400; --purple: #FFB800; --cyan: #FFFFFF;
+    --lime: #FFEA00; --orange: #FF9900; --yellow: #FFD400;
+    --glow: rgba(255,212,0,0.35);
+  }
+  body.theme-blue {
+    --bg-1: #071427; --bg-2: #0b2a4a;
+    --panel: rgba(255,255,255,0.06); --panel-solid: #0f2340;
+    --border: rgba(147,197,253,0.2);
+    --text: #EAF3FF; --text-dim: #A9C6E8;
+    --pink: #3B82F6; --purple: #06B6D4; --cyan: #93C5FD;
+    --lime: #38BDF8; --orange: #60A5FA; --yellow: #7DD3FC;
+    --glow: rgba(59,130,246,0.35);
+  }
+  body.theme-green {
+    --bg-1: #04140d; --bg-2: #0b2e1c;
+    --panel: rgba(255,255,255,0.06); --panel-solid: #0e2a1a;
+    --border: rgba(74,222,128,0.2);
+    --text: #EAFFF2; --text-dim: #A9D9BC;
+    --pink: #22C55E; --purple: #16A34A; --cyan: #86EFAC;
+    --lime: #4ADE80; --orange: #65A30D; --yellow: #A3E635;
+    --glow: rgba(34,197,94,0.35);
+  }
+  body.theme-rose {
+    --bg-1: #1f0512; --bg-2: #3a0b24;
+    --panel: rgba(255,255,255,0.06); --panel-solid: #2c0a1c;
+    --border: rgba(244,114,182,0.22);
+    --text: #FFF0F7; --text-dim: #E3AFC9;
+    --pink: #FB7185; --purple: #F472B6; --cyan: #F9A8D4;
+    --lime: #FBCFE8; --orange: #FB923C; --yellow: #FDE68A;
+    --glow: rgba(244,114,182,0.35);
+  }
+  /* Light mode overrides — declared last so they win regardless of theme-x */
+  body.light {
+    --bg-1: #F3F1FB; --bg-2: #FFFFFF;
+    --panel: rgba(20,10,40,0.045); --panel-solid: #FFFFFF;
+    --border: rgba(20,10,40,0.10);
+    --text: #1B1730; --text-dim: #5B5570;
+    --glow: rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: linear-gradient(120deg, var(--bg-1), var(--bg-2), var(--bg-1));
+    background-size: 300% 300%;
+    animation: bgShift 18s ease infinite;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  @keyframes bgShift {
+    0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; }
+  }
+
+  .blob { position: fixed; border-radius: 50%; filter: blur(60px); opacity: 0.3; z-index: 0; pointer-events: none; transition: background 0.5s ease; }
+  .blob1 { width: 340px; height: 340px; background: var(--pink); top: -80px; left: -80px; animation: floatA 14s ease-in-out infinite; }
+  .blob2 { width: 300px; height: 300px; background: var(--cyan); bottom: -60px; right: -60px; animation: floatB 16s ease-in-out infinite; }
+  .blob3 { width: 260px; height: 260px; background: var(--lime); top: 40%; right: 10%; animation: floatA 20s ease-in-out infinite; }
+  @keyframes floatA { 0%,100% { transform: translate(0,0) scale(1);} 50% { transform: translate(30px,-40px) scale(1.1);} }
+  @keyframes floatB { 0%,100% { transform: translate(0,0) scale(1);} 50% { transform: translate(-30px,30px) scale(1.15);} }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 18px 90px; position: relative; z-index: 1; }
+
+  /* ===================== TOP BAR (theme controls) ===================== */
+  .topbar {
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+    flex-wrap: wrap; padding: 16px 18px 0;
+  }
+  .swatch {
+    width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.4); transition: transform 0.15s;
+  }
+  .swatch:hover { transform: scale(1.15); }
+  .swatch.active { border-color: var(--text); box-shadow: 0 0 0 2px var(--bg-1); }
+  .sw-purple { background: linear-gradient(135deg,#FF3D9A,#A855F7); }
+  .sw-yellow { background: linear-gradient(135deg,#FFD400,#FFB800); }
+  .sw-blue { background: linear-gradient(135deg,#3B82F6,#06B6D4); }
+  .sw-green { background: linear-gradient(135deg,#22C55E,#16A34A); }
+  .sw-rose { background: linear-gradient(135deg,#FB7185,#F472B6); }
+  .mode-btn {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-weight: 600;
+  }
+
+  header.hero { padding: 36px 20px 40px; text-align: center; }
+  .eyebrow {
+    display: inline-block; font-family: 'Baloo 2', sans-serif; font-size: 13px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--bg-1); font-weight: 700; margin-bottom: 16px;
+    background: linear-gradient(90deg, var(--lime), var(--cyan)); padding: 6px 16px; border-radius: 999px;
+  }
+  h1 {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 6.5vw, 50px);
+    line-height: 1.05; letter-spacing: -0.01em; margin-bottom: 14px;
+    background: linear-gradient(90deg, var(--pink), var(--purple), var(--cyan));
+    background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: gradientMove 6s ease infinite;
+  }
+  @keyframes gradientMove { 0% { background-position:0% center;} 50% { background-position:100% center;} 100% { background-position:0% center;} }
+  .hero-sub { max-width: 540px; margin: 0 auto; color: var(--text-dim); font-size: 15.5px; }
+  .emoji-row { font-size: 24px; margin-top: 14px; letter-spacing: 10px; }
+  .emoji-row span { display: inline-block; animation: bob 2.4s ease-in-out infinite; }
+  .emoji-row span:nth-child(2){animation-delay:.3s} .emoji-row span:nth-child(3){animation-delay:.6s} .emoji-row span:nth-child(4){animation-delay:.9s}
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+
+  /* ===================== CARDS / FORM ===================== */
+  .card {
+    background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 26px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    margin-top: 22px;
+  }
+  .card-title {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-sub { font-size: 13.5px; color: var(--text-dim); margin-bottom: 18px; }
+
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; }
+  .field label {
+    display: block; font-family: 'Baloo 2', sans-serif; font-weight: 600; font-size: 12.5px;
+    letter-spacing: 0.03em; color: var(--text-dim); margin-bottom: 7px;
+  }
+  .field input, .field select {
+    width: 100%; background: rgba(128,128,128,0.08); border: 2px solid var(--border); color: var(--text);
+    padding: 11px 13px; font-size: 14.5px; font-family: 'Inter', sans-serif; border-radius: 10px;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--cyan); transform: translateY(-1px); }
+  .field select option { background: var(--panel-solid); color: var(--text); }
+  .field-error { display:none; color: var(--bad); font-size: 12px; margin-top: 5px; font-weight: 600; }
+  .field-error.visible { display:block; }
+  .field input.invalid, .field select.invalid { border-color: var(--bad); }
+
+  .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toggle-group button {
+    flex: 1; min-width: 70px; background: rgba(128,128,128,0.08); border: 2px solid var(--border); color: var(--text-dim);
+    padding: 11px 8px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px; border-radius: 10px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .toggle-group button.active { background: linear-gradient(90deg, var(--pink), var(--purple)); border-color: transparent; color: #fff; }
+
+  .calc-btn {
+    margin-top: 24px; width: 100%; background: linear-gradient(90deg, var(--pink), var(--purple), var(--cyan));
+    background-size: 200% auto; color: #fff; border: none; padding: 16px; font-family: 'Baloo 2', sans-serif;
+    font-size: 17px; font-weight: 700; letter-spacing: 0.02em; border-radius: 14px; cursor: pointer;
+    transition: background-position 0.4s cubic-bezier(.2,.8,.2,1), transform 0.15s; box-shadow: 0 8px 24px var(--glow);
+  }
+  .calc-btn:hover { background-position: right center; transform: translateY(-2px); }
+  .calc-btn:active { transform: translateY(0) scale(0.99); }
+  .general-error { display:none; margin-top: 12px; color: var(--bad); font-size: 13.5px; font-weight: 600; text-align:center; }
+  .general-error.visible { display:block; }
+
+  /* ===================== RESULTS ===================== */
+  .results { display: none; }
+  .results.visible { display: block; animation: fadeUp 0.4s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadeUp { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 14px; }
+  .stat-box {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 18px 14px;
+    text-align: center; opacity: 0; animation: popIn 0.5s cubic-bezier(.2,.8,.2,1) forwards; transition: transform 0.2s;
+  }
+  .stat-box:hover { transform: translateY(-4px); }
+  @keyframes popIn { from{opacity:0; transform:translateY(14px) scale(.95);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .stat-num { font-family:'Baloo 2',sans-serif; font-weight:800; font-size: 26px; line-height:1;
+    background: linear-gradient(90deg, var(--yellow), var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .stat-label { font-family:'Baloo 2',sans-serif; font-size: 11px; font-weight:600; letter-spacing:0.03em; color: var(--text-dim); margin-top: 5px; }
+
+  .plan-banner {
+    margin-top: 22px; border: 1px solid var(--border); border-radius: 18px;
+    background: linear-gradient(120deg, color-mix(in srgb, var(--pink) 15%, transparent), color-mix(in srgb, var(--cyan) 15%, transparent));
+    padding: 20px 24px;
+  }
+  .plan-banner-title { font-family:'Baloo 2',sans-serif; font-size:12.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color: var(--lime); margin-bottom:5px; }
+  .plan-banner-name { font-family:'Baloo 2',sans-serif; font-weight:800; font-size: 23px; margin-bottom:5px; }
+  .plan-banner-text { font-size: 14px; color: var(--text-dim); }
+
+  .section-title {
+    font-family:'Baloo 2',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase;
+    text-align:center; margin: 36px 0 8px; color: var(--cyan);
+  }
+
+  /* ===================== MEAL PLAN ===================== */
+  .meal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; margin-top: 16px; }
+  .meal-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+  .meal-name { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:15px; margin-bottom:4px; }
+  .meal-kcal { font-size: 12.5px; color: var(--lime); font-weight:700; margin-bottom:8px; }
+  .meal-foods { font-size: 13px; color: var(--text-dim); list-style: none; }
+  .meal-foods li { padding: 2px 0; }
+  .meal-foods li::before { content: "• "; color: var(--pink); }
+
+  /* ===================== DAY CARDS / TABLE ===================== */
+  .day-card {
+    margin-top: 16px; border: 1px solid var(--border); border-radius: 18px; background: var(--panel);
+    backdrop-filter: blur(10px); overflow: hidden; opacity: 0; animation: slideIn 0.5s cubic-bezier(.2,.8,.2,1) forwards;
+    transition: transform 0.2s;
+  }
+  .day-card:hover { transform: translateY(-3px); }
+  @keyframes slideIn { from{opacity:0; transform:translateX(-14px);} to{opacity:1; transform:translateX(0);} }
+  .day-head { display:flex; justify-content:space-between; align-items:baseline; padding:15px 20px; flex-wrap:wrap; gap:6px; }
+  .day-name { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:19px; }
+  .day-focus { font-size:12.5px; color: var(--text-dim); font-weight:500; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 480px; }
+  th { font-family:'Baloo 2',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase;
+    color: var(--text-dim); text-align:left; padding: 8px 20px; border-bottom: 1px solid var(--border); white-space:nowrap; }
+  td { padding: 10px 20px; font-size: 13.5px; border-bottom: 1px solid rgba(128,128,128,0.08); }
+  tr:last-child td { border-bottom: none; }
+  .ex-num { color: var(--text-dim); font-weight:700; width: 26px; }
+  .ex-name { font-weight:600; color: var(--text); }
+  .sub-region { display:block; font-size:11px; color: var(--text-dim); font-weight:400; margin-top:1px; }
+  .num-cell { color: var(--text-dim); white-space: nowrap; }
+
+  .note-box { margin-top: 28px; border-radius: 16px; border: 1px solid var(--border);
+    background: linear-gradient(120deg, color-mix(in srgb, var(--lime) 12%, transparent), color-mix(in srgb, var(--cyan) 8%, transparent));
+    padding: 18px 22px; }
+  .note-title { font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.04em; color: var(--lime); margin-bottom:7px; }
+  .note-box p { font-size: 13.5px; color: var(--text-dim); }
+
+  /* ===================== ACTIONS (PDF / SHARE) ===================== */
+  .actions-row { display:flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+  .action-btn {
+    flex:1; min-width:160px; background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 13px; border-radius: 12px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:14px;
+    cursor:pointer; transition: transform 0.15s, background 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .action-btn:hover { transform: translateY(-2px); background: color-mix(in srgb, var(--pink) 12%, var(--panel)); }
+
+  /* ===================== PROGRESS TRACKER ===================== */
+  .tabs { display:flex; gap:8px; margin-bottom: 18px; flex-wrap:wrap; }
+  .tab-btn { background: rgba(128,128,128,0.08); border:1px solid var(--border); color: var(--text-dim);
+    padding: 9px 16px; border-radius: 10px; font-weight:600; font-size:13px; cursor:pointer; font-family:'Inter',sans-serif; }
+  .tab-btn.active { background: linear-gradient(90deg, var(--pink), var(--purple)); color:#fff; border-color:transparent; }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; animation: fadeUp 0.3s ease; }
+
+  .mini-form { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom: 16px; }
+  .mini-field { flex: 1; min-width: 110px; }
+  .mini-field label { display:block; font-size:11.5px; color: var(--text-dim); font-weight:600; margin-bottom:5px; }
+  .mini-field input, .mini-field select {
+    width:100%; background: rgba(128,128,128,0.08); border: 2px solid var(--border); color: var(--text);
+    padding: 9px 10px; border-radius: 9px; font-size: 13.5px;
+  }
+  .add-btn { background: linear-gradient(90deg, var(--lime), var(--cyan)); color: var(--bg-1); border:none;
+    padding: 10px 18px; border-radius: 9px; font-weight:700; font-size:13.5px; cursor:pointer; height: fit-content; }
+
+  .history-table-wrap { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 18px; }
+  .history-table-wrap table { min-width: unset; }
+  .del-btn { background:none; border:none; color: var(--bad); cursor:pointer; font-size:16px; }
+  .empty-state { text-align:center; color: var(--text-dim); font-size: 13.5px; padding: 18px; }
+
+  canvas.progress-chart { width: 100% !important; max-height: 260px; margin-top: 6px; }
+
+  footer.foot { text-align:center; margin-top: 40px; font-size: 12.5px; color: var(--text-dim); }
+
+  @media (max-width: 640px) {
+    .card { padding: 22px 18px; }
+    td, th { padding: 9px 12px; }
+  }
+</style>
+</head>
+<body class="theme-yellow">
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+
+<div class="topbar">
+  <button class="mode-btn" id="mode-toggle" onclick="toggleLight()">🌙 Oscuro</button>
+  <div class="swatch sw-purple" title="Morado" onclick="setTheme('purple')"></div>
+  <div class="swatch sw-yellow active" title="Amarillo" onclick="setTheme('yellow')"></div>
+  <div class="swatch sw-blue" title="Azul" onclick="setTheme('blue')"></div>
+  <div class="swatch sw-green" title="Verde" onclick="setTheme('green')"></div>
+  <div class="swatch sw-rose" title="Rosa" onclick="setTheme('rose')"></div>
+</div>
+
+<header class="hero">
+  <div class="eyebrow">Calculadora de hipertrofia PRO</div>
+  <h1>Tu plan de<br>masa muscular</h1>
+  <p class="hero-sub">Calorías, macros, composición corporal, plan de comidas y tu rutina exacta según tu nivel y dónde entrenas. Guarda tu progreso y descárgalo cuando quieras.</p>
+  <div class="emoji-row"><span>💪</span><span>🔥</span><span>🏋️</span><span>⚡</span></div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===================== FORM CARD ===================== -->
+  <div class="card">
+    <div class="card-title">📋 Tus datos</div>
+    <div class="card-sub">Completa todo para calcular tu plan personalizado.</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Sexo</label>
+        <div class="toggle-group">
+          <button type="button" id="sex-m" class="active" onclick="setSex('m')">Hombre</button>
+          <button type="button" id="sex-f" onclick="setSex('f')">Mujer</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="age">Edad</label>
+        <input type="number" id="age" placeholder="ej. 20">
+        <div class="field-error" id="err-age">La edad debe estar entre 10 y 90 años.</div>
+      </div>
+      <div class="field">
+        <label for="height">Talla (cm)</label>
+        <input type="number" id="height" placeholder="ej. 170">
+        <div class="field-error" id="err-height">La talla debe estar entre 120 y 220 cm.</div>
+      </div>
+      <div class="field">
+        <label for="weight">Peso (kg)</label>
+        <input type="number" id="weight" placeholder="ej. 65">
+        <div class="field-error" id="err-weight">El peso debe estar entre 30 y 250 kg.</div>
+      </div>
+      <div class="field">
+        <label for="activity">Nivel de actividad diaria</label>
+        <select id="activity">
+          <option value="1.2">Sedentario</option>
+          <option value="1.375">Ligero</option>
+          <option value="1.55" selected>Moderado</option>
+          <option value="1.725">Activo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="objetivo">Objetivo</label>
+        <select id="objetivo">
+          <option value="volumen" selected>Volumen (ganar músculo)</option>
+          <option value="definicion">Definición (bajar grasa)</option>
+          <option value="mantenimiento">Mantenimiento</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="nivel">Nivel de experiencia</label>
+        <select id="nivel">
+          <option value="principiante">Principiante</option>
+          <option value="intermedio" selected>Intermedio</option>
+          <option value="avanzado">Avanzado</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="lugar">Dónde entrenas</label>
+        <select id="lugar">
+          <option value="gimnasio" selected>Gimnasio</option>
+          <option value="casa">Casa</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="days">Días que puedes entrenar</label>
+        <select id="days">
+          <option value="2">2 días</option>
+          <option value="3">3 días</option>
+          <option value="4" selected>4 días</option>
+          <option value="5">5 días</option>
+          <option value="6">6 días</option>
+        </select>
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcularPlan()">🚀 Calcular mi plan</button>
+    <div class="general-error" id="general-error">Revisa los campos marcados en rojo antes de calcular.</div>
+  </div>
+
+  <!-- ===================== RESULTS ===================== -->
+  <div class="results" id="results">
+
+    <div class="section-title">Calorías y macros</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="tdee-num">0</div><div class="stat-label">Mantenimiento kcal</div></div>
+      <div class="stat-box"><div class="stat-num" id="target-num">0</div><div class="stat-label" id="target-label">Objetivo kcal</div></div>
+      <div class="stat-box"><div class="stat-num" id="protein-num">0</div><div class="stat-label">Proteína g</div></div>
+      <div class="stat-box"><div class="stat-num" id="fat-num">0</div><div class="stat-label">Grasas g</div></div>
+      <div class="stat-box"><div class="stat-num" id="carb-num">0</div><div class="stat-label">Carbohidratos g</div></div>
+    </div>
+
+    <div class="section-title">Composición corporal (referencial)</div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="bmi-num">0</div><div class="stat-label" id="bmi-label">IMC</div></div>
+      <div class="stat-box"><div class="stat-num" id="ideal-num">0</div><div class="stat-label">Peso ideal kg</div></div>
+      <div class="stat-box"><div class="stat-num" id="bodyfat-num">0</div><div class="stat-label">% Grasa estimado</div></div>
+    </div>
+
+    <div class="plan-banner">
+      <div class="plan-banner-title">🏆 Rutina recomendada</div>
+      <div class="plan-banner-name" id="plan-name">–</div>
+      <div class="plan-banner-text" id="plan-text">–</div>
+    </div>
+
+    <div class="section-title">Ejemplo de alimentación diaria</div>
+    <div class="meal-grid" id="meal-container"></div>
+
+    <div id="days-container"></div>
+
+    <div class="note-box">
+      <div class="note-title">💡 Cómo usar estos números</div>
+      <p id="note-text">Empieza comiendo tu objetivo calórico por 2 semanas y observa tu peso en la balanza. Ajusta 100-150 kcal si no ves cambios. Sube el peso en tus ejercicios cada semana que puedas — eso construye músculo, más que cualquier número exacto de calorías.</p>
+    </div>
+
+    <div class="actions-row">
+      <button class="action-btn" onclick="descargarPDF()">📄 Descargar plan en PDF</button>
+      <button class="action-btn" onclick="compartirResultados()">📤 Compartir resultados</button>
+    </div>
+  </div>
+
+  <!-- ===================== PROGRESS TRACKER ===================== -->
+  <div class="card" style="margin-top:36px;">
+    <div class="card-title">📈 Seguimiento de progreso</div>
+    <div class="card-sub">Tus datos se guardan en este navegador (localStorage). Si cambias de dispositivo o navegador, no se transfieren.</div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('peso', event)">⚖️ Peso corporal</button>
+      <button class="tab-btn" onclick="showTab('medidas', event)">📏 Medidas</button>
+      <button class="tab-btn" onclick="showTab('fuerza', event)">🏋️ Fuerza</button>
+    </div>
+
+    <!-- PESO -->
+    <div class="tab-panel active" id="tab-peso">
+      <div class="mini-form">
+        <div class="mini-field"><label>Fecha</label><input type="date" id="peso-fecha"></div>
+        <div class="mini-field"><label>Peso (kg)</label><input type="number" id="peso-valor" placeholder="ej. 64.5"></div>
+        <button class="add-btn" onclick="addPeso()">+ Agregar</button>
+      </div>
+      <div class="history-table-wrap"><table id="tabla-peso"><thead><tr><th>Fecha</th><th>Peso</th><th></th></tr></thead><tbody></tbody></table></div>
+      <canvas class="progress-chart" id="chart-peso"></canvas>
+    </div>
+
+    <!-- MEDIDAS -->
+    <div class="tab-panel" id="tab-medidas">
+      <div class="mini-form">
+        <div class="mini-field"><label>Fecha</label><input type="date" id="medida-fecha"></div>
+        <div class="mini-field"><label>Cintura (cm)</label><input type="number" id="medida-cintura"></div>
+        <div class="mini-field"><label>Pecho (cm)</label><input type="number" id="medida-pecho"></div>
+        <div class="mini-field"><label>Brazo (cm)</label><input type="number" id="medida-brazo"></div>
+        <div class="mini-field"><label>Pierna (cm)</label><input type="number" id="medida-pierna"></div>
+        <button class="add-btn" onclick="addMedida()">+ Agregar</button>
+      </div>
+      <div class="history-table-wrap"><table id="tabla-medidas"><thead><tr><th>Fecha</th><th>Cintura</th><th>Pecho</th><th>Brazo</th><th>Pierna</th><th></th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <!-- FUERZA -->
+    <div class="tab-panel" id="tab-fuerza">
+      <div class="mini-form">
+        <div class="mini-field">
+          <label>Ejercicio</label>
+          <select id="fuerza-ejercicio">
+            <option>Press banca</option>
+            <option>Sentadilla</option>
+            <option>Peso muerto</option>
+            <option>Press militar</option>
+          </select>
+        </div>
+        <div class="mini-field"><label>Fecha</label><input type="date" id="fuerza-fecha"></div>
+        <div class="mini-field"><label>Peso (kg)</label><input type="number" id="fuerza-peso"></div>
+        <div class="mini-field"><label>Reps</label><input type="number" id="fuerza-reps"></div>
+        <button class="add-btn" onclick="addFuerza()">+ Agregar</button>
+      </div>
+      <div class="history-table-wrap"><table id="tabla-fuerza"><thead><tr><th>Fecha</th><th>Peso</th><th>Reps</th><th></th></tr></thead><tbody></tbody></table></div>
+      <canvas class="progress-chart" id="chart-fuerza"></canvas>
+    </div>
+  </div>
+
+  <footer class="foot">Estimaciones basadas en fórmulas estándar (Mifflin-St Jeor, Deurenberg). Cada cuerpo responde distinto — ajusta según tu propio progreso.</footer>
+</div>
+<script>
+/* ======================================================================
+   ESTADO GLOBAL
+   ====================================================================== */
+let sex = 'm';
+let currentTheme = 'yellow';
+let isLight = false;
+let lastResult = null; // guarda el último cálculo para PDF/compartir
+let weightChart = null;
+let strengthChart = null;
+
+/* ======================================================================
+   THEME SYSTEM
+   ====================================================================== */
+function setTheme(name) {
+  document.body.classList.remove('theme-purple','theme-yellow','theme-blue','theme-green','theme-rose');
+  document.body.classList.add('theme-' + name);
+  currentTheme = name;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+  document.querySelector('.sw-' + name).classList.add('active');
+  redrawCharts();
+}
+function toggleLight() {
+  isLight = !isLight;
+  document.body.classList.toggle('light', isLight);
+  document.getElementById('mode-toggle').textContent = isLight ? '☀️ Claro' : '🌙 Oscuro';
+  redrawCharts();
+}
+function setSex(s) {
+  sex = s;
+  document.getElementById('sex-m').classList.toggle('active', s === 'm');
+  document.getElementById('sex-f').classList.toggle('active', s === 'f');
+  setTheme(s === 'm' ? 'yellow' : 'purple');
+}
+
+/* ======================================================================
+   DATOS: ejercicios con alternativa para casa, y rutinas por día
+   sub(nombre, region) arma la celda con el músculo específico debajo
+   ====================================================================== */
+function sub(name, region) { return `${name}<span class="sub-region">${region}</span>`; }
+
+// Alternativas para entrenar en casa (sin barra/máquinas)
+const HOME_ALT = {
+  'Press banca': 'Flexiones con mochila lastrada',
+  'Sentadilla': 'Sentadilla con mochila lastrada',
+  'Peso muerto': 'Peso muerto con mochila o mancuernas',
+  'Peso muerto convencional': 'Peso muerto con mochila o mancuernas',
+  'Remo con barra': 'Remo con mochila (inclinado)',
+  'Prensa de piernas': 'Sentadilla búlgara con mochila',
+  'Jalón al pecho': 'Dominadas (barra de puerta) o remo con banda',
+  'Dominadas / Jalón': 'Dominadas en barra de puerta o remo con banda',
+  'Press militar': 'Press militar con mancuernas o mochila',
+  'Extensión de cuádriceps': 'Sentadilla a una pierna (pistol asistida)',
+  'Curl femoral': 'Peso muerto a una pierna',
+  'Curl femoral sentado': 'Peso muerto a una pierna',
+  'Elevación de talones': 'Elevación de talones de pie con mochila',
+  'Elevación de talones sentado': 'Elevación de talones de pie con mochila',
+  'Remo en polea baja': 'Remo con banda elástica',
+  'Remo a una mano': 'Remo con mancuerna o mochila',
+  'Extensión de tríceps en polea': 'Fondos en silla o tríceps con banda',
+  'Press francés': 'Extensión de tríceps con mochila',
+  'Curl de bíceps con barra': 'Curl de bíceps con mancuernas o mochila',
+};
+
+function applyLocation(name, lugar) {
+  if (lugar === 'casa' && HOME_ALT[name]) return HOME_ALT[name];
+  return name;
+}
+
+const EXERCISE_TAG = '<span style="color:var(--pink); font-size:10.5px; text-transform:uppercase; margin-left:6px; font-weight:700;">💥 Compuesto</span>';
+
+// Cada ejercicio: [nombre, region, esCompuesto, series_base, reps, descanso]
+const routines = {
+  2: { name: 'Full Body × 2', text: 'Con 2 días, todo el cuerpo se trabaja en cada sesión para no perder frecuencia semanal.', days: [
+    { name: 'Full Body A', focus: 'Cuerpo completo', ex: [
+      ['Sentadilla','Cuádriceps · Glúteo',true,4,'6-8'],
+      ['Press banca','Pecho medio',true,4,'6-8'],
+      ['Remo con barra','Espalda grosor',false,3,'8-10'],
+      ['Press militar','Hombro frontal',false,3,'8-10'],
+      ['Elevaciones laterales','Hombro lateral',false,3,'12-15'],
+      ['Curl femoral','Isquiotibiales',false,3,'12-15'],
+      ['Curl de bíceps con barra','Bíceps',false,2,'10-12'],
+    ]},
+    { name: 'Full Body B', focus: 'Cuerpo completo', ex: [
+      ['Peso muerto','Isquios · Espalda baja',true,4,'5-6'],
+      ['Dominadas / Jalón','Espalda ancho',true,4,'8-10'],
+      ['Press inclinado mancuerna','Pecho alto',false,3,'8-10'],
+      ['Zancadas','Glúteo · Cuádriceps',false,3,'10-12'],
+      ['Face pull','Hombro posterior',false,3,'15'],
+      ['Elevación de talones','Gemelo',false,3,'12-15'],
+      ['Extensión de tríceps en polea','Tríceps',false,2,'10-12'],
+    ]},
+  ]},
+  3: { name: 'Push / Pull / Legs', text: 'Un ciclo por semana dividido por función. Buen punto de partida si empiezas con poco tiempo.', days: [
+    { name: 'Push', focus: 'Pecho · Hombro · Tríceps', ex: [
+      ['Press banca','Pecho medio',true,4,'6-8'],
+      ['Press inclinado mancuerna','Pecho alto',false,3,'8-10'],
+      ['Fondos en paralelas','Pecho bajo · Tríceps',false,3,'8-10'],
+      ['Press militar','Hombro frontal',false,3,'8-10'],
+      ['Elevaciones laterales','Hombro lateral',false,3,'12-15'],
+      ['Aperturas con mancuerna','Pecho medio',false,3,'12-15'],
+      ['Extensión de tríceps en polea','Tríceps lateral',false,3,'10-12'],
+    ]},
+    { name: 'Pull', focus: 'Espalda · Bíceps', ex: [
+      ['Dominadas / Jalón','Espalda ancho',true,4,'8-10'],
+      ['Remo con barra','Espalda grosor',false,4,'8-10'],
+      ['Remo a una mano','Dorsal medio',false,3,'10-12'],
+      ['Face pull','Hombro posterior',false,3,'15'],
+      ['Curl de bíceps con barra','Bíceps global',false,3,'10-12'],
+      ['Curl martillo','Braquial · Antebrazo',false,3,'10-12'],
+    ]},
+    { name: 'Legs', focus: 'Pierna completa', ex: [
+      ['Sentadilla','Cuádriceps · Glúteo',true,4,'6-8'],
+      ['Peso muerto rumano','Isquiotibiales',false,4,'8-10'],
+      ['Prensa de piernas','Cuádriceps',false,3,'10-12'],
+      ['Hip thrust','Glúteo',false,3,'10-12'],
+      ['Extensión de cuádriceps','Cuádriceps aislado',false,3,'12-15'],
+      ['Curl femoral','Isquiotibiales aislado',false,3,'12-15'],
+      ['Elevación de talones','Gemelo',false,4,'12-15'],
+    ]},
+  ]},
+  4: { name: 'Torso / Pierna', text: 'El mejor balance entre frecuencia y recuperación para la mayoría. Cada músculo entrena 2 veces por semana.', days: [
+    { name: 'Torso A', focus: 'Pecho · Espalda · Hombro · Tríceps', ex: [
+      ['Press banca','Pecho medio',true,4,'6-8'],
+      ['Press inclinado mancuerna','Pecho alto',false,3,'8-10'],
+      ['Fondos en paralelas','Pecho bajo',false,3,'8-10'],
+      ['Remo con barra','Espalda grosor',false,4,'8-10'],
+      ['Jalón al pecho','Espalda ancho',false,3,'10-12'],
+      ['Press militar','Hombro frontal',false,3,'8-10'],
+      ['Elevaciones laterales','Hombro lateral',false,3,'12-15'],
+      ['Extensión de tríceps en polea','Tríceps lateral',false,3,'10-12'],
+    ]},
+    { name: 'Pierna A', focus: 'Cuádriceps · Glúteo · Isquios', ex: [
+      ['Sentadilla','Cuádriceps · Glúteo',true,4,'6-8'],
+      ['Peso muerto rumano','Isquiotibiales',false,4,'8-10'],
+      ['Prensa de piernas','Cuádriceps',false,3,'10-12'],
+      ['Hip thrust','Glúteo',false,3,'10-12'],
+      ['Extensión de cuádriceps','Cuádriceps aislado',false,3,'12-15'],
+      ['Curl femoral','Isquiotibiales aislado',false,3,'12-15'],
+      ['Elevación de talones','Gemelo',false,4,'12-15'],
+    ]},
+    { name: 'Torso B', focus: 'Espalda · Pecho · Brazo', ex: [
+      ['Dominadas / Jalón','Espalda ancho',true,4,'6-10'],
+      ['Press inclinado mancuerna','Pecho alto',false,4,'8-10'],
+      ['Remo en polea baja','Dorsal medio',false,3,'10-12'],
+      ['Fondos en paralelas','Pecho bajo · Tríceps',false,3,'8-10'],
+      ['Face pull','Hombro posterior',false,3,'15'],
+      ['Curl de bíceps con barra','Bíceps global',false,3,'10-12'],
+      ['Extensión de tríceps en polea','Tríceps lateral',false,3,'10-12'],
+    ]},
+    { name: 'Pierna B', focus: 'Glúteo · Isquios · Cuádriceps', ex: [
+      ['Peso muerto convencional','Isquios · Espalda baja',true,4,'5-6'],
+      ['Sentadilla búlgara','Glúteo · Cuádriceps',false,3,'8-10'],
+      ['Hip thrust','Glúteo',false,3,'10-12'],
+      ['Zancadas','Glúteo · Cuádriceps',false,3,'10-12'],
+      ['Extensión de cuádriceps','Cuádriceps aislado',false,3,'12-15'],
+      ['Curl femoral sentado','Isquiotibiales aislado',false,3,'12-15'],
+      ['Elevación de talones sentado','Sóleo',false,4,'15'],
+    ]},
+  ]},
+  5: { name: 'PPL + Torso/Pierna (Híbrido)', text: 'Un día extra permite combinar lo mejor de ambos enfoques con buen volumen semanal.', days: [
+    { name: 'Push', focus: 'Pecho · Hombro · Tríceps', ex: [
+      ['Press banca','Pecho medio',true,4,'6-8'],
+      ['Press inclinado mancuerna','Pecho alto',false,3,'8-10'],
+      ['Fondos en paralelas','Pecho bajo · Tríceps',false,3,'8-10'],
+      ['Press militar','Hombro frontal',false,3,'8-10'],
+      ['Elevaciones laterales','Hombro lateral',false,3,'12-15'],
+    ]},
+    { name: 'Pull', focus: 'Espalda · Bíceps', ex: [
+      ['Dominadas / Jalón','Espalda ancho',true,4,'8-10'],
+      ['Remo con barra','Espalda grosor',false,4,'8-10'],
+      ['Remo a una mano','Dorsal medio',false,3,'10-12'],
+      ['Curl de bíceps con barra','Bíceps global',false,3,'10-12'],
+      ['Curl martillo','Braquial · Antebrazo',false,3,'10-12'],
+    ]},
+    { name: 'Legs', focus: 'Pierna completa', ex: [
+      ['Sentadilla','Cuádriceps · Glúteo',true,4,'6-8'],
+      ['Peso muerto rumano','Isquiotibiales',false,4,'8-10'],
+      ['Hip thrust','Glúteo',false,3,'10-12'],
+      ['Extensión de cuádriceps','Cuádriceps aislado',false,3,'12-15'],
+      ['Elevación de talones','Gemelo',false,4,'12-15'],
+    ]},
+    { name: 'Torso (repaso)', focus: 'Volumen extra torso', ex: [
+      ['Press inclinado mancuerna','Pecho alto',false,3,'8-10'],
+      ['Remo en polea baja','Dorsal medio',false,3,'10-12'],
+      ['Elevaciones laterales','Hombro lateral',false,3,'12-15'],
+      ['Face pull','Hombro posterior',false,3,'15'],
+      ['Extensión de tríceps en polea','Tríceps lateral',false,3,'10-12'],
+    ]},
+    { name: 'Pierna (repaso)', focus: 'Volumen extra pierna', ex: [
+      ['Prensa de piernas','Cuádriceps',false,3,'10-12'],
+      ['Sentadilla búlgara','Glúteo · Cuádriceps',false,3,'8-10'],
+      ['Curl femoral','Isquiotibiales aislado',false,3,'12-15'],
+      ['Elevación de talones sentado','Sóleo',false,3,'15'],
+    ]},
+  ]},
+  6: { name: 'Push / Pull / Legs × 2', text: 'Máxima frecuencia y volumen. Rinde igual que Torso/Pierna, pero exige más tiempo semanal.', days: [
+    { name: 'Push A', focus: 'Pecho · Hombro · Tríceps', ex: [
+      ['Press banca','Pecho medio',true,4,'6-8'],
+      ['Press militar','Hombro frontal',false,3,'8-10'],
+      ['Aperturas con mancuerna','Pecho medio aislado',false,3,'12-15'],
+      ['Extensión de tríceps en polea','Tríceps lateral',false,3,'10-12'],
+    ]},
+    { name: 'Pull A', focus: 'Espalda · Bíceps', ex: [
+      ['Dominadas / Jalón','Espalda ancho',true,4,'8-10'],
+      ['Remo con barra','Espalda grosor',false,4,'8-10'],
+      ['Face pull','Hombro posterior',false,3,'15'],
+      ['Curl de bíceps con barra','Bíceps global',false,3,'10-12'],
+    ]},
+    { name: 'Legs A', focus: 'Cuádriceps · Glúteo', ex: [
+      ['Sentadilla','Cuádriceps · Glúteo',true,4,'6-8'],
+      ['Prensa de piernas','Cuádriceps',false,3,'10-12'],
+      ['Extensión de cuádriceps','Cuádriceps aislado',false,3,'12-15'],
+      ['Elevación de talones','Gemelo',false,4,'12-15'],
+    ]},
+    { name: 'Push B', focus: 'Hombro · Pecho · Tríceps', ex: [
+      ['Press inclinado mancuerna','Pecho alto',true,4,'8-10'],
+      ['Elevaciones laterales','Hombro lateral',false,3,'12-15'],
+      ['Fondos en paralelas','Pecho bajo · Tríceps',false,3,'8-10'],
+      ['Press francés','Tríceps cabeza larga',false,3,'10-12'],
+    ]},
+    { name: 'Pull B', focus: 'Espalda · Bíceps', ex: [
+      ['Peso muerto','Isquios · Espalda baja',true,4,'5-6'],
+      ['Remo en polea baja','Dorsal medio',false,3,'10-12'],
+      ['Remo a una mano','Dorsal medio',false,3,'10-12'],
+      ['Curl martillo','Braquial · Antebrazo',false,3,'10-12'],
+    ]},
+    { name: 'Legs B', focus: 'Isquios · Glúteo', ex: [
+      ['Peso muerto rumano','Isquiotibiales',true,4,'8-10'],
+      ['Sentadilla búlgara','Glúteo · Cuádriceps',false,3,'8-10'],
+      ['Hip thrust','Glúteo',false,3,'10-12'],
+      ['Curl femoral','Isquiotibiales aislado',false,3,'12-15'],
+    ]},
+  ]}
+};
+
+/* Ajusta series/exigencia según nivel. Descanso fijo en 3 min para todos
+   (evidencia: descansos largos rinden igual o mejor hipertrofia). */
+function adjustForLevel(baseSets, nivel) {
+  if (nivel === 'principiante') return Math.max(2, baseSets - 1);
+  if (nivel === 'avanzado') return baseSets + 1;
+  return baseSets;
+}
+function levelNote(nivel) {
+  if (nivel === 'principiante') return '';
+  if (nivel === 'avanzado') return ' <span style="color:var(--orange); font-weight:700;">+ intensidad</span>';
+  return '';
+}
+
+/* ======================================================================
+   VALIDACIÓN
+   ====================================================================== */
+function clearErrors() {
+  ['age','height','weight'].forEach(id => {
+    document.getElementById(id).classList.remove('invalid');
+    document.getElementById('err-' + id).classList.remove('visible');
+  });
+  document.getElementById('general-error').classList.remove('visible');
+}
+function showError(id) {
+  document.getElementById(id).classList.add('invalid');
+  document.getElementById('err-' + id).classList.add('visible');
+}
+
+function validateAndGetInputs() {
+  clearErrors();
+  const age = parseFloat(document.getElementById('age').value);
+  let height = parseFloat(document.getElementById('height').value);
+  const weight = parseFloat(document.getElementById('weight').value);
+  let ok = true;
+
+  if (!age || age < 10 || age > 90) { showError('age'); ok = false; }
+  if (!height) { showError('height'); ok = false; }
+  else {
+    if (height < 10) height = height * 100; // alguien puso metros
+    if (height < 120 || height > 220) { showError('height'); ok = false; }
+  }
+  if (!weight || weight < 30 || weight > 250) { showError('weight'); ok = false; }
+
+  if (!ok) {
+    document.getElementById('general-error').classList.add('visible');
+    document.getElementById('results').classList.remove('visible');
+    return null;
+  }
+  return { age, height, weight };
+}
+
+/* ======================================================================
+   CÁLCULOS: calorías, macros, IMC, peso ideal, % grasa
+   ====================================================================== */
+function calcularTodo(age, height, weight, activity, objetivo) {
+  const bmr = sex === 'm'
+    ? 10 * weight + 6.25 * height - 5 * age + 5
+    : 10 * weight + 6.25 * height - 5 * age - 161;
+  const tdee = bmr * activity;
+
+  let targetCals, proteinFactor;
+  if (objetivo === 'volumen') { targetCals = tdee * 1.12; proteinFactor = 2.0; }
+  else if (objetivo === 'definicion') { targetCals = tdee * 0.80; proteinFactor = 2.2; }
+  else { targetCals = tdee; proteinFactor = 2.0; }
+
+  const proteinG = weight * proteinFactor;
+  const proteinCals = proteinG * 4;
+  const fatCals = targetCals * 0.27;
+  const fatG = fatCals / 9;
+  const carbCals = Math.max(targetCals - proteinCals - fatCals, 0);
+  const carbG = carbCals / 4;
+
+  const heightM = height / 100;
+  const bmi = weight / (heightM * heightM);
+  const idealWeight = 22 * heightM * heightM;
+  const sexVal = sex === 'm' ? 1 : 0;
+  let bodyFat = (1.20 * bmi) + (0.23 * age) - (10.8 * sexVal) - 5.4;
+  bodyFat = Math.max(3, Math.min(bodyFat, 55));
+
+  return { tdee, targetCals, proteinG, fatG, carbG, bmi, idealWeight, bodyFat };
+}
+
+function bmiLabel(bmi) {
+  if (bmi < 18.5) return 'Bajo peso';
+  if (bmi < 25) return 'Normal';
+  if (bmi < 30) return 'Sobrepeso';
+  return 'Obesidad';
+}
+
+/* ======================================================================
+   PLAN DE ALIMENTACIÓN — plantilla de ejemplo repartida por comida
+   ====================================================================== */
+const MEAL_TEMPLATE = [
+  { name: '🍳 Desayuno', pct: 0.25, foods: ['Avena con leche y fruta', 'Huevos revueltos', 'Fruta de temporada'] },
+  { name: '🍗 Almuerzo', pct: 0.35, foods: ['Pechuga de pollo o carne magra', 'Arroz o papa', 'Ensalada con palta'] },
+  { name: '🐟 Cena', pct: 0.25, foods: ['Pescado o carne magra', 'Quinua o camote', 'Vegetales al vapor'] },
+  { name: '🥤 Snack', pct: 0.15, foods: ['Yogurt griego con fruta', 'Puñado de frutos secos', 'Batido de proteína'] },
+];
+
+function renderMealPlan(targetCals, proteinG) {
+  const container = document.getElementById('meal-container');
+  container.innerHTML = '';
+  MEAL_TEMPLATE.forEach((meal, i) => {
+    const kcal = Math.round(targetCals * meal.pct);
+    const prot = Math.round(proteinG * meal.pct);
+    const div = document.createElement('div');
+    div.className = 'meal-card';
+    div.style.opacity = '0';
+    div.style.animation = `popIn 0.5s cubic-bezier(.2,.8,.2,1) forwards`;
+    div.style.animationDelay = (i * 0.08) + 's';
+    div.innerHTML = `
+      <div class="meal-name">${meal.name}</div>
+      <div class="meal-kcal">~${kcal} kcal · ${prot} g proteína</div>
+      <ul class="meal-foods">${meal.foods.map(f => `<li>${f}</li>`).join('')}</ul>
+    `;
+    container.appendChild(div);
+  });
+}
+
+/* ======================================================================
+   RENDER DE RUTINA (aplica nivel + lugar de entreno + numeración)
+   ====================================================================== */
+function renderRoutine(days, nivel, lugar) {
+  const routine = routines[days];
+  document.getElementById('plan-name').textContent = routine.name;
+  document.getElementById('plan-text').textContent =
+    `${routine.text} Ajustada a nivel ${nivel} y entreno en ${lugar}. Descanso: 3 minutos en todos los ejercicios (maximiza hipertrofia).`;
+
+  const container = document.getElementById('days-container');
+  container.innerHTML = '';
+
+  routine.days.forEach((day, di) => {
+    const rows = day.ex.map(([name, region, compound, baseSets, reps], i) => {
+      const finalName = applyLocation(name, lugar);
+      const sets = adjustForLevel(baseSets, nivel);
+      return `
+        <tr>
+          <td class="ex-num">${i + 1}</td>
+          <td class="ex-name">${sub(finalName, region)}${compound ? EXERCISE_TAG : ''}${levelNote(nivel)}</td>
+          <td class="num-cell">${compound ? 'Compuesto' : 'Aislado'}</td>
+          <td class="num-cell">${sets}</td>
+          <td class="num-cell">${reps}</td>
+          <td class="num-cell">3 min</td>
+        </tr>`;
+    }).join('');
+
+    const card = document.createElement('div');
+    card.innerHTML = `
+      <div class="section-title">Día ${di + 1}</div>
+      <div class="day-card" style="animation-delay:${0.08 + di * 0.08}s">
+        <div class="day-head">
+          <div class="day-name">${day.name}</div>
+          <div class="day-focus">${day.focus}</div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <tr><th>#</th><th>Ejercicio</th><th>Tipo</th><th>Series</th><th>Reps</th><th>Descanso</th></tr>
+            ${rows}
+          </table>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+/* ======================================================================
+   FUNCIÓN PRINCIPAL: calcular y mostrar todo
+   ====================================================================== */
+function animateNumber(el, target, duration, decimals) {
+  decimals = decimals || 0;
+  const startTime = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = (target * eased).toFixed(decimals);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function calcularPlan() {
+  const inputs = validateAndGetInputs();
+  if (!inputs) return;
+  const { age, height, weight } = inputs;
+
+  const activity = parseFloat(document.getElementById('activity').value);
+  const objetivo = document.getElementById('objetivo').value;
+  const nivel = document.getElementById('nivel').value;
+  const lugar = document.getElementById('lugar').value;
+  const days = parseInt(document.getElementById('days').value);
+
+  const r = calcularTodo(age, height, weight, activity, objetivo);
+
+  const targetLabels = { volumen: 'Objetivo ganancia kcal', definicion: 'Objetivo déficit kcal', mantenimiento: 'Mantenimiento objetivo kcal' };
+  document.getElementById('target-label').textContent = targetLabels[objetivo];
+
+  animateNumber(document.getElementById('tdee-num'), Math.round(r.tdee), 800);
+  animateNumber(document.getElementById('target-num'), Math.round(r.targetCals), 800);
+  animateNumber(document.getElementById('protein-num'), Math.round(r.proteinG), 800);
+  animateNumber(document.getElementById('fat-num'), Math.round(r.fatG), 800);
+  animateNumber(document.getElementById('carb-num'), Math.round(r.carbG), 800);
+  animateNumber(document.getElementById('bmi-num'), r.bmi, 800, 1);
+  animateNumber(document.getElementById('ideal-num'), Math.round(r.idealWeight), 800);
+  animateNumber(document.getElementById('bodyfat-num'), r.bodyFat, 800, 1);
+  document.getElementById('bmi-label').textContent = 'IMC · ' + bmiLabel(r.bmi);
+
+  renderMealPlan(r.targetCals, r.proteinG);
+  renderRoutine(days, nivel, lugar);
+
+  lastResult = { age, height, weight, activity, objetivo, nivel, lugar, days, ...r,
+    objetivoLabel: objetivo === 'volumen' ? 'Volumen' : objetivo === 'definicion' ? 'Definición' : 'Mantenimiento',
+    routineName: routines[days].name };
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ======================================================================
+   ALMACENAMIENTO PERSISTENTE — localStorage del navegador.
+   Funciona en cualquier hosting real (Netlify, Vercel, servidor propio, etc).
+   Nota: dentro de la vista previa del chat de Claude puede estar bloqueado
+   por el sandbox; pruébalo ya subido a tu hosting real.
+   ====================================================================== */
+let progresoPeso = [];
+let progresoMedidas = [];
+let progresoFuerza = {}; // { 'Press banca': [{fecha,peso,reps}], ... }
+
+const STORAGE_KEYS = {
+  peso: 'plan-muscular:progreso-peso',
+  medidas: 'plan-muscular:progreso-medidas',
+  fuerza: 'plan-muscular:progreso-fuerza',
+};
+
+function cargarProgreso() {
+  try {
+    const p = localStorage.getItem(STORAGE_KEYS.peso);
+    progresoPeso = p ? JSON.parse(p) : [];
+  } catch (e) { console.error('Error cargando peso', e); progresoPeso = []; }
+  try {
+    const m = localStorage.getItem(STORAGE_KEYS.medidas);
+    progresoMedidas = m ? JSON.parse(m) : [];
+  } catch (e) { console.error('Error cargando medidas', e); progresoMedidas = []; }
+  try {
+    const f = localStorage.getItem(STORAGE_KEYS.fuerza);
+    progresoFuerza = f ? JSON.parse(f) : {};
+  } catch (e) { console.error('Error cargando fuerza', e); progresoFuerza = {}; }
+  renderPesoTable();
+  renderMedidasTable();
+  renderFuerzaTable();
+  redrawCharts();
+}
+
+function guardarPeso() {
+  try { localStorage.setItem(STORAGE_KEYS.peso, JSON.stringify(progresoPeso)); }
+  catch (e) { console.error('Error guardando peso', e); alert('No se pudo guardar. Revisa el espacio de almacenamiento del navegador.'); }
+}
+function guardarMedidas() {
+  try { localStorage.setItem(STORAGE_KEYS.medidas, JSON.stringify(progresoMedidas)); }
+  catch (e) { console.error('Error guardando medidas', e); alert('No se pudo guardar. Revisa el espacio de almacenamiento del navegador.'); }
+}
+function guardarFuerza() {
+  try { localStorage.setItem(STORAGE_KEYS.fuerza, JSON.stringify(progresoFuerza)); }
+  catch (e) { console.error('Error guardando fuerza', e); alert('No se pudo guardar. Revisa el espacio de almacenamiento del navegador.'); }
+}
+
+
+/* ======================================================================
+   TABS DE PROGRESO
+   ====================================================================== */
+function showTab(name, evt) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  evt.target.classList.add('active');
+}
+
+/* ======================================================================
+   PESO CORPORAL
+   ====================================================================== */
+function renderPesoTable() {
+  const tbody = document.querySelector('#tabla-peso tbody');
+  if (!progresoPeso.length) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Aún no has agregado registros de peso.</td></tr>';
+    return;
+  }
+  const ordered = [...progresoPeso].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  tbody.innerHTML = ordered.map(entry => {
+    const realIdx = progresoPeso.indexOf(entry);
+    return `<tr><td>${entry.fecha}</td><td>${entry.peso} kg</td><td><button class="del-btn" onclick="delPeso(${realIdx})">✕</button></td></tr>`;
+  }).join('');
+}
+function addPeso() {
+  const fecha = document.getElementById('peso-fecha').value;
+  const peso = parseFloat(document.getElementById('peso-valor').value);
+  if (!fecha || !peso) { alert('Completa la fecha y el peso.'); return; }
+  progresoPeso.push({ fecha, peso });
+  guardarPeso();
+  renderPesoTable();
+  redrawWeightChart();
+  document.getElementById('peso-valor').value = '';
+}
+function delPeso(idx) {
+  progresoPeso.splice(idx, 1);
+  guardarPeso();
+  renderPesoTable();
+  redrawWeightChart();
+}
+
+/* ======================================================================
+   MEDIDAS CORPORALES
+   ====================================================================== */
+function renderMedidasTable() {
+  const tbody = document.querySelector('#tabla-medidas tbody');
+  if (!progresoMedidas.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aún no has agregado medidas.</td></tr>';
+    return;
+  }
+  const ordered = [...progresoMedidas].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  tbody.innerHTML = ordered.map(entry => {
+    const realIdx = progresoMedidas.indexOf(entry);
+    return `<tr><td>${entry.fecha}</td><td>${entry.cintura||'-'}</td><td>${entry.pecho||'-'}</td><td>${entry.brazo||'-'}</td><td>${entry.pierna||'-'}</td><td><button class="del-btn" onclick="delMedida(${realIdx})">✕</button></td></tr>`;
+  }).join('');
+}
+function addMedida() {
+  const fecha = document.getElementById('medida-fecha').value;
+  if (!fecha) { alert('Completa la fecha.'); return; }
+  const entry = {
+    fecha,
+    cintura: document.getElementById('medida-cintura').value,
+    pecho: document.getElementById('medida-pecho').value,
+    brazo: document.getElementById('medida-brazo').value,
+    pierna: document.getElementById('medida-pierna').value,
+  };
+  progresoMedidas.push(entry);
+  guardarMedidas();
+  renderMedidasTable();
+  ['medida-cintura','medida-pecho','medida-brazo','medida-pierna'].forEach(id => document.getElementById(id).value = '');
+}
+function delMedida(idx) {
+  progresoMedidas.splice(idx, 1);
+  guardarMedidas();
+  renderMedidasTable();
+}
+
+/* ======================================================================
+   FUERZA EN EJERCICIOS
+   ====================================================================== */
+function renderFuerzaTable() {
+  const ejercicio = document.getElementById('fuerza-ejercicio').value;
+  const tbody = document.querySelector('#tabla-fuerza tbody');
+  const lista = progresoFuerza[ejercicio] || [];
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Sin registros para este ejercicio.</td></tr>';
+    return;
+  }
+  const ordered = [...lista].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  tbody.innerHTML = ordered.map(entry => {
+    const realIdx = lista.indexOf(entry);
+    return `<tr><td>${entry.fecha}</td><td>${entry.peso} kg</td><td>${entry.reps}</td><td><button class="del-btn" onclick="delFuerza('${ejercicio}',${realIdx})">✕</button></td></tr>`;
+  }).join('');
+}
+function addFuerza() {
+  const ejercicio = document.getElementById('fuerza-ejercicio').value;
+  const fecha = document.getElementById('fuerza-fecha').value;
+  const peso = parseFloat(document.getElementById('fuerza-peso').value);
+  const reps = parseInt(document.getElementById('fuerza-reps').value);
+  if (!fecha || !peso || !reps) { alert('Completa fecha, peso y repeticiones.'); return; }
+  if (!progresoFuerza[ejercicio]) progresoFuerza[ejercicio] = [];
+  progresoFuerza[ejercicio].push({ fecha, peso, reps });
+  guardarFuerza();
+  renderFuerzaTable();
+  redrawStrengthChart();
+  document.getElementById('fuerza-peso').value = '';
+  document.getElementById('fuerza-reps').value = '';
+}
+function delFuerza(ejercicio, idx) {
+  progresoFuerza[ejercicio].splice(idx, 1);
+  guardarFuerza();
+  renderFuerzaTable();
+  redrawStrengthChart();
+}
+document.addEventListener('change', e => { if (e.target.id === 'fuerza-ejercicio') { renderFuerzaTable(); redrawStrengthChart(); } });
+
+/* ======================================================================
+   GRÁFICAS (Chart.js)
+   ====================================================================== */
+function chartColors() {
+  const styles = getComputedStyle(document.body);
+  return {
+    text: styles.getPropertyValue('--text-dim').trim() || '#999',
+    line: styles.getPropertyValue('--pink').trim() || '#FF3D9A',
+    grid: 'rgba(128,128,128,0.15)',
+  };
+}
+function redrawWeightChart() {
+  const c = chartColors();
+  const ordered = [...progresoPeso].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+  const ctx = document.getElementById('chart-peso').getContext('2d');
+  if (weightChart) weightChart.destroy();
+  weightChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: ordered.map(e => e.fecha), datasets: [{
+      label: 'Peso (kg)', data: ordered.map(e => e.peso),
+      borderColor: c.line, backgroundColor: c.line + '33', tension: 0.35, fill: true, pointRadius: 4,
+    }]},
+    options: { responsive: true, plugins: { legend: { labels: { color: c.text } } },
+      scales: { x: { ticks: { color: c.text }, grid: { color: c.grid } }, y: { ticks: { color: c.text }, grid: { color: c.grid } } } }
+  });
+}
+function redrawStrengthChart() {
+  const c = chartColors();
+  const ejercicio = document.getElementById('fuerza-ejercicio').value;
+  const lista = progresoFuerza[ejercicio] || [];
+  const ordered = [...lista].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+  const ctx = document.getElementById('chart-fuerza').getContext('2d');
+  if (strengthChart) strengthChart.destroy();
+  strengthChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: ordered.map(e => e.fecha), datasets: [{
+      label: ejercicio + ' (kg)', data: ordered.map(e => e.peso),
+      borderColor: c.line, backgroundColor: c.line + '33', tension: 0.35, fill: true, pointRadius: 4,
+    }]},
+    options: { responsive: true, plugins: { legend: { labels: { color: c.text } } },
+      scales: { x: { ticks: { color: c.text }, grid: { color: c.grid } }, y: { ticks: { color: c.text }, grid: { color: c.grid } } } }
+  });
+}
+function redrawCharts() { redrawWeightChart(); redrawStrengthChart(); }
+
+/* ======================================================================
+   DESCARGAR PDF
+   ====================================================================== */
+function descargarPDF() {
+  if (!lastResult) { alert('Primero calcula tu plan.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const r = lastResult;
+  let y = 20;
+
+  doc.setFontSize(18); doc.setFont(undefined, 'bold');
+  doc.text('Tu Plan de Masa Muscular', 14, y); y += 10;
+
+  doc.setFontSize(10); doc.setFont(undefined, 'normal');
+  doc.text(`Objetivo: ${r.objetivoLabel} · Nivel: ${r.nivel} · Entreno: ${r.lugar} · Días: ${r.days}`, 14, y); y += 10;
+
+  doc.setFontSize(13); doc.setFont(undefined, 'bold');
+  doc.text('Calorías y macros', 14, y); y += 7;
+  doc.setFontSize(10.5); doc.setFont(undefined, 'normal');
+  doc.text(`Mantenimiento: ${Math.round(r.tdee)} kcal`, 14, y); y += 6;
+  doc.text(`Objetivo (${r.objetivoLabel}): ${Math.round(r.targetCals)} kcal`, 14, y); y += 6;
+  doc.text(`Proteína: ${Math.round(r.proteinG)} g   Grasas: ${Math.round(r.fatG)} g   Carbohidratos: ${Math.round(r.carbG)} g`, 14, y); y += 10;
+
+  doc.setFontSize(13); doc.setFont(undefined, 'bold');
+  doc.text('Composición corporal (referencial)', 14, y); y += 7;
+  doc.setFontSize(10.5); doc.setFont(undefined, 'normal');
+  doc.text(`IMC: ${r.bmi.toFixed(1)} (${bmiLabel(r.bmi)})   Peso ideal: ${Math.round(r.idealWeight)} kg   % Grasa estimado: ${r.bodyFat.toFixed(1)}%`, 14, y); y += 10;
+
+  doc.setFontSize(13); doc.setFont(undefined, 'bold');
+  doc.text(`Rutina: ${r.routineName}`, 14, y); y += 8;
+
+  const routine = routines[r.days];
+  doc.setFontSize(10.5);
+  routine.days.forEach((day, di) => {
+    if (y > 265) { doc.addPage(); y = 20; }
+    doc.setFont(undefined, 'bold');
+    doc.text(`Día ${di + 1}: ${day.name} (${day.focus})`, 14, y); y += 6;
+    doc.setFont(undefined, 'normal');
+    day.ex.forEach(([name, region, compound, baseSets, reps], i) => {
+      if (y > 275) { doc.addPage(); y = 20; }
+      const finalName = applyLocation(name, r.lugar);
+      const sets = adjustForLevel(baseSets, r.nivel);
+      doc.text(`  ${i + 1}. ${finalName} (${region}) — ${sets} series x ${reps} reps — 3 min descanso`, 16, y);
+      y += 5.5;
+    });
+    y += 4;
+  });
+
+  doc.save('plan-muscular.pdf');
+}
+
+/* ======================================================================
+   COMPARTIR RESULTADOS
+   ====================================================================== */
+function compartirResultados() {
+  if (!lastResult) { alert('Primero calcula tu plan.'); return; }
+  const r = lastResult;
+  const texto = `💪 Mi plan de masa muscular\n\n` +
+    `Objetivo: ${r.objetivoLabel}\n` +
+    `Calorías objetivo: ${Math.round(r.targetCals)} kcal\n` +
+    `Proteína: ${Math.round(r.proteinG)} g · Grasas: ${Math.round(r.fatG)} g · Carbos: ${Math.round(r.carbG)} g\n` +
+    `IMC: ${r.bmi.toFixed(1)} · % Grasa estimado: ${r.bodyFat.toFixed(1)}%\n` +
+    `Rutina: ${r.routineName} (${r.days} días, nivel ${r.nivel}, en ${r.lugar})`;
+
+  if (navigator.share) {
+    navigator.share({ title: 'Mi plan de masa muscular', text: texto }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(texto).then(() => alert('Copiado al portapapeles ✅'));
+  } else {
+    alert(texto);
+  }
+}
+
+/* ======================================================================
+   INICIALIZACIÓN
+   ====================================================================== */
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('peso-fecha').value = today;
+  document.getElementById('medida-fecha').value = today;
+  document.getElementById('fuerza-fecha').value = today;
+  cargarProgreso();
+});
+</script>
+</body>
+</html>
